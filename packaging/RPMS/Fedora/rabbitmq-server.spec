@@ -118,7 +118,13 @@ fi
 %post
 
 %if 0%{?fedora} || 0%{?rhel} >= 7
-%systemd_post %{name}.service
+# %systemd_post %{name}.service
+# manual expansion of systemd_post as this doesn't appear to
+# expand correctly on debian machines
+if [ $1 -eq 1 ] ; then
+    # Initial installation
+    systemctl preset %{name}.service >/dev/null 2>&1 || :
+fi
 /bin/systemctl daemon-reload
 %else
 /sbin/chkconfig --add %{name}
@@ -146,7 +152,13 @@ done
 
 %postun
 %if 0%{?fedora} || 0%{?rhel} >= 7
-%systemd_postun_with_restart %{name}.service
+# %systemd_postun_with_restart %{name}.service
+# manual expansion of systemd_postun_with_restart as this doesn't appear to
+# expand correctly on debian machines
+if [ $1 -ge 1 ] ; then
+    # Package upgrade, not uninstall
+    systemctl try-restart %{name}.service >/dev/null 2>&1 || :
+fi
 %else
 if [ $1 -gt 1 ]; then
    /sbin/service %{name} try-restart
